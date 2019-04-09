@@ -190,6 +190,7 @@ class Obj(object):
         self.vertices =[] 
         self.texvert = []
         self.faces = []
+        self.normals = []
         with open(filename) as f:
             self.lines = f.read().splitlines()
         self.read()
@@ -208,7 +209,8 @@ class Obj(object):
                 
                 if prefix == 'usemtl':
                     valuemt = value
-                
+                elif prefix == "vn":
+                    self.normals.append(list(map(float, value.split(' '))))
                 elif prefix == "vt":
                     self.texvert.append(list(map(float, value.split(' '))))
                 elif prefix == "f":
@@ -271,6 +273,11 @@ class Texture(object):
         x = int(tx * self.width)
         y = int(ty * self.height)
         return bytes(map(lambda b: round(b*intensidad) if (b *intensidad > 0) else 0,(self.pixels[y][x])))
+    def get_colorSI(self, tx, ty):
+        x = int(tx * self.width)
+        y = int(ty * self.height)
+        return bytes(map(lambda b: round(b) if (b > 0) else 0,(self.pixels[y][x])))
+
 
        
 # ==========================================================================
@@ -279,6 +286,8 @@ class Texture(object):
 
 class Bitmap(object):
     def __init__(self, width, height):
+        self.active_shader = None
+        self.active_txt = None
         self.width = width
         self.height = height
         self.framebuffer = []
@@ -329,39 +338,6 @@ class Bitmap(object):
 
     def point(self,x,y,color = color(255,255,255)):
         self.framebuffer[y][x] = color
-
-    #funcion de línea, para dibujar el outline de los triangulos
-    def line(self, v1, v2, color = color(255,255,255)):
-        global vpx, vpy, centrox, centroy, bm, vpHeight, vpWidth
-        x1, y1, x2, y2 =  v1.x, v1.y, v2.x, v2.y
-        dy = abs(y2-y1)
-        dx = abs(x2-x1)
-        m = dy
-        steep = dy >dx 
-
-        if steep:
-            x1,y1 = y1,x1
-            x2,y2 = y2,x2
-            dy = abs(y2-y1)
-            dx = abs(x2-x1)
-            m = dy/dx *dx
-        
-        if x1>x2:
-            x1, x2 = x2, x1
-            y1, y2 = y2, y1
-
-        offset =0 
-        threshold = 0.5 *2 *dx
-        y = y1
-        for x in range(x1, x2+1):
-            if steep:
-                self.point(y, x, color)
-            else:
-                self.point(x, y, color)
-            offset +=m
-            if offset >= threshold:
-                y+=1 if y1<y2 else -1
-                threshold +=1 *dx
 
     def transform(self, vertex):
         aumentado = [
@@ -471,14 +447,15 @@ class Bitmap(object):
 #el rotate tiene los angulos medidos en radianes
 #    def load(self, filename, matfile, translate =(-0.75,-0.75,-0.5), scale= (1000, 1000, 1000), rotate = (0,0,0)):
     def load(self, filename, matfile, texture, translate =(0,0,0), scale= (0.2, 0.2, 0.2), rotate = (0,0,0),
-            eye = (0,0.5,0.5), up = (0,1,0), center=(0,0,0)):
+            eye = (0,0.5,0.5), up = (0,1,0), center=(0,0,0), light = Vector3(0,0,1)):
+        self.active_shader = gourad
+        self.active_txt = texture
         model = Obj(filename)
-        luz= Vector3(-0.7,0.7,0.7)
+        luz = light
 
         self.loadViewportMatrix()
         self.loadModelMatrix(translate, scale, rotate)
         self.lookAt(Vector3(*eye), Vector3(*up), Vector3(*center))
-
         #aplicación de luz y material a cada cara encontrada en el modelo
         for face in model.faces:
             vcount = len(face)
@@ -498,8 +475,9 @@ class Bitmap(object):
                     continue
                 elif shade > 255:
                     shade = 255
+                if intensidad>1.0:
+                    intensidad = 1
                 if not texture:
-                    #self.triangle(a,b,c, color(int(shade*(material.vmat[0][0])),int(shade*(material.vmat[0][1])),int(shade*(material.vmat[0][2]))))
                     self.triangle(a,b,c, color(shade,shade,shade))
                 else:
                     t1 = face[0][1]-1
@@ -509,32 +487,71 @@ class Bitmap(object):
                     tA = Vector2(*model.texvert[t1])
                     tB = Vector2(*model.texvert[t2])
                     tC = Vector2(*model.texvert[t3])
-                    self.triangle(
-                        a,b,c,
-                        color(shade,shade,shade),
-                        texture=texture,
-                        texture_coords= (tA, tB, tC), 
-                        intensidad=intensidad
-                    )
-    
-    def triangle(self, A, B, C, color= color(255,255,255), texture= None, texture_coords=(), intensidad=1):
-        xy_min, xy_max = ordenarXY(A,B,C)
+                    if self.active_shader != None:
+                        n1 = face[0][2] -1
+                        n2 = face[1][2] -1
+                        n3 = face[2][2] -1
 
+                        na = Vector3(*model.normals[n1])
+                        nb = Vector3(*model.normals[n2])
+                        nc = Vector3(*model.normals[n3])
+                        self.triangle(
+                            a,b,c,
+                            color(shade,shade,shade),
+                            texture=texture,
+                            texture_coords= (tA, tB, tC), 
+                            intensidad=intensidad, 
+                            nA = na, nC=nc,nB=nb,
+                            luz =luz
+                        )
+                    else:
+                        self.triangle(
+                            a,b,c,
+                            color(shade,shade,shade),
+                            texture=texture,
+                            texture_coords= (tA, tB, tC), 
+                            intensidad=intensidad
+                        )
+    
+    def triangle(self, A, B, C, color= color(255,255,255), texture= None, texture_coords=(), intensidad=1, nA = None, nB=None, nC=None, luz = Vector3(0,1,1)):
+        xy_min, xy_max = ordenarXY(A,B,C)
+        
         for x in range(xy_min.x, xy_max.x + 1):
             for y in range (xy_min.y, xy_max.y + 1):
                 w, v, u = barycentric(A,B,C, Vector2(x,y))
                 if w< 0 or v <0 or u<0:
                     continue
                 
-                if texture:
+                if texture and x>=0 and y >=0 and x < self.width and y< self.height:
                     tA, tC, tB = texture_coords
                     tx = tA.x*w + tB.x*v + tC.x*u
                     ty = tA.y*w + tB.y*v + tC.y*u
-                    color = texture.get_color(tx, ty, intensidad)
+                    colour = self.active_shader(self, x, y, bar=(w,v,u), normales=(nA, nC, nB), light = luz, txt_coor = (tx, ty))
 
-                z = A.z*w + B.z*v  + C.z*u
-                if z > self.zbuffer[x][y]:
-                    self.point(x,y,color)
-                    self.zbuffer[x][y] = z
+                    z = A.z*w + B.z*v  + C.z*u
+                    if z > self.zbuffer[x][y]:
+                        self.point(x,y,colour)
+                        self.zbuffer[x][y] = z
 
+def gourad(render, x, y, **kwargs):
+    w,v,u = kwargs["bar"]
+    tx, ty = kwargs["txt_coor"]
+    nA, nB, nC = kwargs["normales"]
+    luz = kwargs["light"]
+    normx = nA.x*w + nB.x*v + nC.x*u 
+    normy = nA.y*w + nB.y*v + nC.y*u 
+    normz = nA.z*w + nB.z*v + nC.z*u 
+    vnormal = Vector3(normx, normy, normz)
+    intensity = prodPunto(vnormal, luz)
+    if intensity < 0:
+        intensity =0
+    elif intensity >1:
+        intensity =1
+    
+    tcolor = render.active_txt.get_colorSI(tx,ty)
 
+    return color(
+        round(tcolor[2]*intensity),
+        round(tcolor[1]*intensity),
+        round(tcolor[0]*intensity)
+    )
