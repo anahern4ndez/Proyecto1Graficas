@@ -473,7 +473,7 @@ class Bitmap(object):
     def load(self, filename, matfile, texture, translate =(0,0,0), scale= (0.2, 0.2, 0.2), rotate = (0,0,0),
             eye = (0,0.5,0.5), up = (0,1,0), center=(0,0,0)):
         model = Obj(filename)
-        luz= Vector3(0,1,1)
+        luz= Vector3(-0.7,0.7,0.7)
 
         self.loadViewportMatrix()
         self.loadModelMatrix(translate, scale, rotate)
@@ -493,12 +493,14 @@ class Bitmap(object):
                 normal = normalizar(prodCruz(restaVectorial(b,a), restaVectorial(c, a)))
                 intensidad = prodPunto(normal, luz)
                 shade = int(255*intensidad)
+
                 if shade <0 :
                     continue
                 elif shade > 255:
                     shade = 255
                 if not texture:
-                    self.triangle(a,b,c, color(shade, shade, shade))
+                    #self.triangle(a,b,c, color(int(shade*(material.vmat[0][0])),int(shade*(material.vmat[0][1])),int(shade*(material.vmat[0][2]))))
+                    self.triangle(a,b,c, color(shade,shade,shade))
                 else:
                     t1 = face[0][1]-1
                     t2 = face[1][1]-1
@@ -510,13 +512,12 @@ class Bitmap(object):
                     self.triangle(
                         a,b,c,
                         color(shade,shade,shade),
-                        texture = texture,
+                        texture=texture,
                         texture_coords= (tA, tB, tC), 
                         intensidad=intensidad
-                    ) 
-                
+                    )
     
-    def triangle(self, A, B, C, color= color(255,255,255), texture= None, texture_coords=(), intensidad =1):
+    def triangle(self, A, B, C, color= color(255,255,255), texture= None, texture_coords=(), intensidad=1):
         xy_min, xy_max = ordenarXY(A,B,C)
 
         for x in range(xy_min.x, xy_max.x + 1):
@@ -526,14 +527,14 @@ class Bitmap(object):
                     continue
                 
                 if texture:
-                    tA, tB, tC = texture_coords
+                    tA, tC, tB = texture_coords
                     tx = tA.x*w + tB.x*v + tC.x*u
                     ty = tA.y*w + tB.y*v + tC.y*u
                     color = texture.get_color(tx, ty, intensidad)
 
                 z = A.z*w + B.z*v  + C.z*u
-                if x < self.width and y < self.height and x>=0 and y>=0:
-                    if z > self.zbuffer[x][y]:
-                        self.point(x,y,color)
-                        self.zbuffer[x][y] = z
-                
+                if z > self.zbuffer[x][y]:
+                    self.point(x,y,color)
+                    self.zbuffer[x][y] = z
+
+
