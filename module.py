@@ -180,42 +180,41 @@ def mulMat(A, B):
     except(RuntimeError, TypeError, NameError) as error:
         print(error)
     return C
-
 # ==========================================================================
 #               CLASE OBJ
 # ==========================================================================
 #clase que servira para crear el obj
-
 class Obj(object):
     def __init__(self, filename):
         self.vertices =[] 
         self.texvert = []
+        self. normals =[]
         self.faces = []
-        self.normals = []
+        self.matf = {} # caras con su respectivo material
+        
         with open(filename) as f:
             self.lines = f.read().splitlines()
         self.read()
 
     # se realiza la lectura del archivo obj
     def read(self):
+        key = ""
         for line in self.lines:
             if line:
                 prefix, value = line.split(' ', 1)
-                valuemt = ''
-                #vertices del modelo
+
+                if prefix == "usemtl":
+                    key = value
+                    self.matf[key] = []
                 if prefix == "v":
                     self.vertices.append(list(map(float, value.split(' '))))
-                
-                #vertices de las caras
-                
-                if prefix == 'usemtl':
-                    valuemt = value
-                elif prefix == "vn":
+                if prefix == "vn":
                     self.normals.append(list(map(float, value.split(' '))))
                 elif prefix == "vt":
                     self.texvert.append(list(map(float, value.split(' '))))
                 elif prefix == "f":
                     self.faces.append([list(map(int, face.split('/'))) for face in value.split(' ')])
+                    self.matf[key].append([list(map(int, face.split('/'))) for face in value.split(' ')])
 
 
 # ==========================================================================
@@ -225,21 +224,23 @@ class Obj(object):
 class Material(object):
     def __init__(self, filename):
 
-        self.vmat =[] 
+        self.rgbDic = {} #diccionario con valores rgb de los materiales
         with open(filename) as f:
             self.lines = f.read().splitlines()
         self.read()
 
     # se realiza la lectura del archivo obj
     def read(self):
+        key = ""
         for line in self.lines:
             if line:
                 prefix, value = line.split(' ', 1)
-
+                if prefix == "newmtl":
+                    key = value
                 if prefix == "Kd":
-                    self.vmat.append(list(map(float, value.split(' '))))
-
-             
+                    lista = (list(map(float, value.split(' '))))
+                    self.rgbDic[key]= (lista[0], lista[1], lista[2])
+  
 # ==========================================================================
 #               CLASE TEXTURA
 # ==========================================================================
@@ -480,8 +481,16 @@ class Bitmap(object):
                     shade = 255
                 if intensidad>1.0:
                     intensidad = 1
-                if not texture:
-                    self.triangle(a,b,c, color(shade,shade,shade))
+                rc, gc, bc = 0,0,0
+                #obtencion de colores para vertices 
+                for key in model.matf:
+                    for vertices in model.matf[key]:
+                        if face[0] == vertices[0] or face[1] == vertices[1] or face[2] == vertices[2]:
+                            rc = material.rgbDic[key][0]
+                            gc = material.rgbDic[key][1]
+                            bc = material.rgbDic[key][2]
+                if texture == None:
+                    self.triangle(a,b,c, color(round(shade*rc),round(shade*gc),round(shade*bc)))
                 else:
                     t1 = face[0][1]-1
                     t2 = face[1][1]-1
@@ -500,7 +509,7 @@ class Bitmap(object):
                         nc = Vector3(*model.normals[n3])
                         self.triangle(
                             a,b,c,
-                            color(int(shade*(material.vmat[0][0])),int(shade*(material.vmat[0][1])),int(shade*(material.vmat[0][2]))),
+                            color(round(shade*rc),round(shade*gc),round(shade*bc)),
                             texture=texture,
                             texture_coords= (tA, tB, tC), 
                             intensidad=intensidad, 
@@ -510,7 +519,7 @@ class Bitmap(object):
                     else:
                         self.triangle(
                             a,b,c,
-                            color(int(shade*(material.vmat[0][0])),int(shade*(material.vmat[0][1])),int(shade*(material.vmat[0][1]))),
+                            color(round(shade*rc),round(shade*gc),round(shade*bc)),
                             texture=texture,
                             texture_coords= (tA, tB, tC), 
                             intensidad=intensidad
