@@ -453,7 +453,7 @@ class Bitmap(object):
         self.active_txt = texture
         model = Obj(filename)
         luz = light
-        if filename == "dalmata":
+        if filename == "dalmata.obj":
             self.active_shader = gouradDalmatian
         self.loadViewportMatrix()
         self.loadModelMatrix(translate, scale, rotate)
@@ -575,18 +575,14 @@ def gouradDalmatian(render, x, y, **kwargs):
 
     #colores
     near_white = (183,183,181)
+
     pnoise = p.Perlin()
     for m in range(800):
         for n in range(800):
-            col = [int((pnoise.value(x/800.0, y/800.0, 0)+1) *200), ] *3
-
-            if col[1] < 220:
-                mul = [int((near_white[0]/255.0*col[0])* intensity),int((near_white[1]/255.0*col[1])* intensity),
-                int((near_white[2]/255.0*col[2])* intensity)]
-                if mul[0] < 0: mul[0] =0
-                if mul[1] < 0: mul[1] = 0
-                if mul[2] < 0: mul[2] = 0
-                return color(mul[0], mul[1], mul[2])
-            else:
-                return color(0,0,0)
-                
+            col = [int((pnoise.value(x/10.0, y/10.0, 0)+1) *200), ] *3
+            mul = [int((near_white[0]/255.0*col[0])* intensity),int((near_white[1]/255.0*col[1])* intensity),
+            int((near_white[2]/255.0*col[2])* intensity)]
+            if mul[0] < 0: mul[0] =0
+            if mul[1] < 0: mul[1] = 0
+            if mul[2] < 0: mul[2] = 0
+            return color(mul[0], mul[1], mul[2])
