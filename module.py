@@ -8,6 +8,7 @@
 import struct
 from collections import namedtuple
 from math import *
+import perlin as p
 
 #variables globales
 Vector2 = namedtuple('Vertex2',['x', 'y'])
@@ -452,7 +453,8 @@ class Bitmap(object):
         self.active_txt = texture
         model = Obj(filename)
         luz = light
-
+        if filename == "dalmata":
+            self.active_shader = gouradDalmatian
         self.loadViewportMatrix()
         self.loadModelMatrix(translate, scale, rotate)
         self.lookAt(Vector3(*eye), Vector3(*up), Vector3(*center))
@@ -555,3 +557,36 @@ def gourad(render, x, y, **kwargs):
         round(tcolor[1]*intensity),
         round(tcolor[0]*intensity)
     )
+
+
+def gouradDalmatian(render, x, y, **kwargs):
+    w,v,u = kwargs["bar"]
+    nA, nB, nC = kwargs["normales"]
+    luz = kwargs["light"]
+    normx = nA.x*w + nB.x*v + nC.x*u 
+    normy = nA.y*w + nB.y*v + nC.y*u 
+    normz = nA.z*w + nB.z*v + nC.z*u 
+    vnormal = Vector3(normx, normy, normz)
+    intensity = prodPunto(vnormal, luz)
+    if intensity < 0:
+        intensity =0
+    elif intensity >1:
+        intensity =1
+
+    #colores
+    near_white = (183,183,181)
+    pnoise = p.Perlin()
+    for m in range(800):
+        for n in range(800):
+            col = [int((pnoise.value(x/800.0, y/800.0, 0)+1) *200), ] *3
+
+            if col[1] < 220:
+                mul = [int((near_white[0]/255.0*col[0])* intensity),int((near_white[1]/255.0*col[1])* intensity),
+                int((near_white[2]/255.0*col[2])* intensity)]
+                if mul[0] < 0: mul[0] =0
+                if mul[1] < 0: mul[1] = 0
+                if mul[2] < 0: mul[2] = 0
+                return color(mul[0], mul[1], mul[2])
+            else:
+                return color(0,0,0)
+                
