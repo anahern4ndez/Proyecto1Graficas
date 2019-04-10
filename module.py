@@ -452,6 +452,7 @@ class Bitmap(object):
         self.active_shader = gourad
         self.active_txt = texture
         model = Obj(filename)
+        material = Material(matfile)
         luz = light
         if filename == "dalmata.obj":
             self.active_shader = gouradDalmatian
@@ -499,7 +500,7 @@ class Bitmap(object):
                         nc = Vector3(*model.normals[n3])
                         self.triangle(
                             a,b,c,
-                            color(shade,shade,shade),
+                            color(int(shade*(material.vmat[0][0])),int(shade*(material.vmat[0][1])),int(shade*(material.vmat[0][2]))),
                             texture=texture,
                             texture_coords= (tA, tB, tC), 
                             intensidad=intensidad, 
@@ -509,7 +510,7 @@ class Bitmap(object):
                     else:
                         self.triangle(
                             a,b,c,
-                            color(shade,shade,shade),
+                            color(int(shade*(material.vmat[0][0])),int(shade*(material.vmat[0][1])),int(shade*(material.vmat[0][1]))),
                             texture=texture,
                             texture_coords= (tA, tB, tC), 
                             intensidad=intensidad
@@ -579,7 +580,7 @@ def gouradDalmatian(render, x, y, **kwargs):
     pnoise = p.Perlin()
     for m in range(800):
         for n in range(800):
-            col = [int((pnoise.value(x/10.0, y/10.0, 0)+1) *200), ] *3
+            col = [int((pnoise.value(x/10.0, y/10.0, 0)+1) * 200), ] *3
             mul = [int((near_white[0]/255.0*col[0])* intensity),int((near_white[1]/255.0*col[1])* intensity),
             int((near_white[2]/255.0*col[2])* intensity)]
             if mul[0] < 0: mul[0] =0
