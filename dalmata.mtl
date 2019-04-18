@@ -1,14 +1,25 @@
 # Blender MTL File: 'dalmata.blend'
-# Material Count: 1
+# Material Count: 2
+
+newmtl Body
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd /Users/polaris/Documents/5/GRAFICAS/proyecto1/dalmata/dalmata.bmp
 
 newmtl Dog
 Ns 29.411765
 Ka 1.000000 1.000000 1.000000
-Kd 1.000000 1.000000 1.000000
-Ks 0.090000 0.090000 0.090000
+Kd 0.000000 0.000000 0.000000
+Ks 0.000000 0.000000 0.000000
 Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 2
-map_Kd /Users/polaris/Documents/5/GRAFICAS/proyecto1/Dog_v1_L2.123c5d808744-ef1b-4857-84b2-a1f51b66d768/Dog_diffuse.jpg
-map_Ka /Users/polaris/Documents/5/GRAFICAS/proyecto1/Dog_v1_L2.123c5d808744-ef1b-4857-84b2-a1f51b66d768/Dog_diffuse.jpg
+map_Kd /Users/polaris/Documents/5/GRAFICAS/proyecto1/dalmata/dalmata.bmp
+map_Ka /Users/polaris/Documents/5/GRAFICAS/proyecto1/dalmata/Dog_diffuse.jpg

@@ -4,10 +4,10 @@ from base_noise import noise_gradients
 class Perlin(object):
     def __init__(
         self,
-        frequency=0.5,
+        frequency=1.0,
         lacunarity=2,
-        octaves=12,
-        persistance=0.6,
+        octaves=8,
+        persistance=0.5,
         seed=0,
     ):
         self.frequency = frequency

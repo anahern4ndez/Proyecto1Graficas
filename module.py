@@ -460,10 +460,22 @@ class Bitmap(object):
         self.loadViewportMatrix()
         self.loadModelMatrix(translate, scale, rotate)
         self.lookAt(Vector3(*eye), Vector3(*up), Vector3(*center))
+
+        #print(model.matf)
         #aplicación de luz y material a cada cara encontrada en el modelo
         for face in model.faces:
             vcount = len(face)
             if vcount == 3:
+
+                     ##             normales 
+                n1 = face[0][2] -1
+                n2 = face[1][2] -1
+                n3 = face[2][2] -1
+
+                na = Vector3(*model.normals[n1])
+                nb = Vector3(*model.normals[n2])
+                nc = Vector3(*model.normals[n3])
+                    ##          coordenadas de caras
                 f1 = face[0][0] -1
                 f2 = face[1][0] -1
                 f3 = face[2][0] -1
@@ -482,7 +494,7 @@ class Bitmap(object):
                 if intensidad>1.0:
                     intensidad = 1
                 rc, gc, bc = 0,0,0
-                #obtencion de colores para vertices 
+                #obtencion de colores de los materiales para vertices 
                 for key in model.matf:
                     for vertices in model.matf[key]:
                         if face[0] == vertices[0] or face[1] == vertices[1] or face[2] == vertices[2]:
@@ -490,7 +502,16 @@ class Bitmap(object):
                             gc = material.rgbDic[key][1]
                             bc = material.rgbDic[key][2]
                 if texture == None:
-                    self.triangle(a,b,c, color(round(shade*rc),round(shade*gc),round(shade*bc)))
+                    self.triangle(
+                        a,b,c, 
+                        colour = (round(shade*rc),round(shade*gc),round(shade*bc)), 
+                        texture = None, 
+                        texture_coords = (),
+                        intensidad = intensidad,
+                        nA = na, nC=nc,nB=nb,
+                        luz =luz
+                    )
+                    
                 else:
                     t1 = face[0][1]-1
                     t2 = face[1][1]-1
@@ -500,16 +521,9 @@ class Bitmap(object):
                     tB = Vector2(*model.texvert[t2])
                     tC = Vector2(*model.texvert[t3])
                     if self.active_shader != None:
-                        n1 = face[0][2] -1
-                        n2 = face[1][2] -1
-                        n3 = face[2][2] -1
-
-                        na = Vector3(*model.normals[n1])
-                        nb = Vector3(*model.normals[n2])
-                        nc = Vector3(*model.normals[n3])
                         self.triangle(
                             a,b,c,
-                            color(round(shade*rc),round(shade*gc),round(shade*bc)),
+                            colour = (round(rc),round(gc),round(bc)),
                             texture=texture,
                             texture_coords= (tA, tB, tC), 
                             intensidad=intensidad, 
@@ -519,13 +533,13 @@ class Bitmap(object):
                     else:
                         self.triangle(
                             a,b,c,
-                            color(round(shade*rc),round(shade*gc),round(shade*bc)),
+                            colour = (round(shade*rc),round(shade*gc),round(shade*bc)),
                             texture=texture,
                             texture_coords= (tA, tB, tC), 
                             intensidad=intensidad
                         )
     
-    def triangle(self, A, B, C, color= color(255,255,255), texture= None, texture_coords=(), intensidad=1, nA = None, nB=None, nC=None, luz = Vector3(0,1,1)):
+    def triangle(self, A, B, C, colour= color(255,255,255), texture= None, texture_coords=(), intensidad=1, nA = None, nB=None, nC=None, luz = Vector3(0,1,1)):
         xy_min, xy_max = ordenarXY(A,B,C)
         
         for x in range(xy_min.x, xy_max.x + 1):
@@ -538,8 +552,14 @@ class Bitmap(object):
                     tA, tC, tB = texture_coords
                     tx = tA.x*w + tB.x*v + tC.x*u
                     ty = tA.y*w + tB.y*v + tC.y*u
-                    colour = self.active_shader(self, x, y, bar=(w,v,u), normales=(nA, nC, nB), light = luz, txt_coor = (tx, ty))
+                    colour = self.active_shader(self, x, y, bar=(w,v,u), normales=(nA, nC, nB), light = luz, txt_coor = (tx, ty), colorMat = colour)
 
+                    z = A.z*w + B.z*v  + C.z*u
+                    if z > self.zbuffer[x][y]:
+                        self.point(x,y,colour)
+                        self.zbuffer[x][y] = z
+                if not texture and x>=0 and y >=0 and x < self.width and y< self.height:
+                    colour = color(colour[0],colour[1],colour[2])
                     z = A.z*w + B.z*v  + C.z*u
                     if z > self.zbuffer[x][y]:
                         self.point(x,y,colour)
@@ -573,6 +593,8 @@ def gouradDalmatian(render, x, y, **kwargs):
     w,v,u = kwargs["bar"]
     nA, nB, nC = kwargs["normales"]
     luz = kwargs["light"]
+    tx, ty = kwargs["txt_coor"]
+    cmat = kwargs["colorMat"]
     normx = nA.x*w + nB.x*v + nC.x*u 
     normy = nA.y*w + nB.y*v + nC.y*u 
     normz = nA.z*w + nB.z*v + nC.z*u 
@@ -585,14 +607,16 @@ def gouradDalmatian(render, x, y, **kwargs):
 
     #colores
     near_white = (183,183,181)
-
     pnoise = p.Perlin()
     for m in range(800):
         for n in range(800):
             col = [int((pnoise.value(x/10.0, y/10.0, 0)+1) * 200), ] *3
-            mul = [int((near_white[0]/255.0*col[0])* intensity),int((near_white[1]/255.0*col[1])* intensity),
-            int((near_white[2]/255.0*col[2])* intensity)]
-            if mul[0] < 0: mul[0] =0
-            if mul[1] < 0: mul[1] = 0
-            if mul[2] < 0: mul[2] = 0
-            return color(mul[0], mul[1], mul[2])
+            if col[1] >150 and col[0] >150:
+                return color(0,0,0)
+            else:
+                mul = [int((near_white[0]/255.0*col[0])* intensity),int((near_white[1]/255.0*col[1])* intensity),
+                int((near_white[2]/255.0*col[2])* intensity)]
+                if mul[0] < 0: mul[0] =0
+                if mul[1] < 0: mul[1] = 0
+                if mul[2] < 0: mul[2] = 0
+                return color(mul[0], mul[1], mul[2])
