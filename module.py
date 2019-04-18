@@ -607,16 +607,19 @@ def gouradDalmatian(render, x, y, **kwargs):
 
     #colores
     near_white = (183,183,181)
-    pnoise = p.Perlin()
+    dark_wood =(80,64,51)
+
+    pnoise = p.Perlin(frequency=0.3,lacunarity=2,octaves=8,persistance=0.2,seed=0)
     for m in range(800):
         for n in range(800):
             col = [int((pnoise.value(x/10.0, y/10.0, 0)+1) * 200), ] *3
-            if col[1] >150 and col[0] >150:
-                return color(0,0,0)
+            if col[1] <160 and col[0] <160 and col[0] <160:
+                return color(int(dark_wood[0]*intensity),int(dark_wood[1]*intensity),int(dark_wood[2]*intensity))
             else:
-                mul = [int((near_white[0]/255.0*col[0])* intensity),int((near_white[1]/255.0*col[1])* intensity),
+                return color(int(near_white[0]*intensity),int(near_white[1]*intensity),int(near_white[2]*intensity))
+                '''mul = [int((near_white[0]/255.0*col[0])* intensity),int((near_white[1]/255.0*col[1])* intensity),
                 int((near_white[2]/255.0*col[2])* intensity)]
                 if mul[0] < 0: mul[0] =0
                 if mul[1] < 0: mul[1] = 0
                 if mul[2] < 0: mul[2] = 0
-                return color(mul[0], mul[1], mul[2])
+                return color(mul[0], mul[1], mul[2])'''
