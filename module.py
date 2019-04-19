@@ -609,7 +609,7 @@ def gouradDalmatian(render, x, y, **kwargs):
     near_white = (183,183,181)
     dark_wood =(80,64,51)
 
-    pnoise = p.Perlin(frequency=0.3,lacunarity=2,octaves=8,persistance=0.2,seed=0)
+    pnoise = p.Perlin(frequency=0.6,lacunarity=2,octaves=8,persistance=0.2,seed=0)
     for m in range(800):
         for n in range(800):
             col = [int((pnoise.value(x/10.0, y/10.0, 0)+1) * 200), ] *3
