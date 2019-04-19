@@ -457,11 +457,11 @@ class Bitmap(object):
         luz = light
         if filename == "dalmata.obj":
             self.active_shader = gouradDalmatian
+        
         self.loadViewportMatrix()
         self.loadModelMatrix(translate, scale, rotate)
         self.lookAt(Vector3(*eye), Vector3(*up), Vector3(*center))
 
-        #print(model.matf)
         #aplicación de luz y material a cada cara encontrada en el modelo
         for face in model.faces:
             vcount = len(face)
@@ -497,10 +497,11 @@ class Bitmap(object):
                 #obtencion de colores de los materiales para vertices 
                 for key in model.matf:
                     for vertices in model.matf[key]:
-                        if face[0] == vertices[0] or face[1] == vertices[1] or face[2] == vertices[2]:
+                        if face[0] == vertices[0] and face[1] == vertices[1] and face[2] == vertices[2]:
                             rc = material.rgbDic[key][0]
                             gc = material.rgbDic[key][1]
                             bc = material.rgbDic[key][2]
+                        
                 if texture == None:
                     self.triangle(
                         a,b,c, 
@@ -520,28 +521,20 @@ class Bitmap(object):
                     tA = Vector2(*model.texvert[t1])
                     tB = Vector2(*model.texvert[t2])
                     tC = Vector2(*model.texvert[t3])
-                    if self.active_shader != None:
-                        self.triangle(
-                            a,b,c,
-                            colour = (round(rc),round(gc),round(bc)),
-                            texture=texture,
-                            texture_coords= (tA, tB, tC), 
-                            intensidad=intensidad, 
-                            nA = na, nC=nc,nB=nb,
-                            luz =luz
-                        )
-                    else:
-                        self.triangle(
-                            a,b,c,
-                            colour = (round(shade*rc),round(shade*gc),round(shade*bc)),
-                            texture=texture,
-                            texture_coords= (tA, tB, tC), 
-                            intensidad=intensidad
-                        )
+                    self.triangle(
+                        a,b,c,
+                        (rc, gc, bc),
+                        texture=texture,
+                        texture_coords= (tA, tB, tC), 
+                        intensidad=intensidad, 
+                        nA = na, nC=nc,nB=nb,
+                        luz =luz
+                    )
     
-    def triangle(self, A, B, C, colour= color(255,255,255), texture= None, texture_coords=(), intensidad=1, nA = None, nB=None, nC=None, luz = Vector3(0,1,1)):
+    def triangle(self, A, B, C, colour= (0,0,0), texture= None, texture_coords=(), intensidad=1, nA = None, nB=None, nC=None, luz = Vector3(0,1,1)):
         xy_min, xy_max = ordenarXY(A,B,C)
         
+        colorMat = colour
         for x in range(xy_min.x, xy_max.x + 1):
             for y in range (xy_min.y, xy_max.y + 1):
                 w, v, u = barycentric(A,B,C, Vector2(x,y))
@@ -552,7 +545,7 @@ class Bitmap(object):
                     tA, tC, tB = texture_coords
                     tx = tA.x*w + tB.x*v + tC.x*u
                     ty = tA.y*w + tB.y*v + tC.y*u
-                    colour = self.active_shader(self, x, y, bar=(w,v,u), normales=(nA, nC, nB), light = luz, txt_coor = (tx, ty), colorMat = colour)
+                    colour = self.active_shader(self, x, y, bar=(w,v,u), normales=(nA, nC, nB), light = luz, txt_coor = (tx, ty), colorMat = colorMat)
 
                     z = A.z*w + B.z*v  + C.z*u
                     if z > self.zbuffer[x][y]:
@@ -607,19 +600,66 @@ def gouradDalmatian(render, x, y, **kwargs):
 
     #colores
     near_white = (183,183,181)
-    dark_wood =(80,64,51)
+    dark_wood =(40,24,11)
+    #print(cmat[0], cmat[1], cmat[2])
+    #se evalúan los colores de los materiales para que la nariz y los ojos se pinten con textura y el cuerpo se pinte con noise
+    if cmat[0] !=0  and cmat[1] !=0  and cmat[2] !=0 :
+        pnoise = p.Perlin(frequency=0.6,lacunarity=2,octaves=8,persistance=0.2,seed=0)
+        for m in range(800):
+            for n in range(800):
+                col = [int((pnoise.value(x/10.0, y/10.0, 0)+1) * 200), ] *3
+                if col[1] <160 and col[0] <160 and col[0] <160:
+                    return color(int(dark_wood[0]*intensity),int(dark_wood[1]*intensity),int(dark_wood[2]*intensity))
+                else:
+                    return color(int(near_white[0]*intensity),int(near_white[1]*intensity),int(near_white[2]*intensity))
+    else: 
+        tcolor = render.active_txt.get_colorSI(tx,ty)
+        return color(
+            round(tcolor[2]*intensity),
+            round(tcolor[1]*intensity),
+            round(tcolor[0]*intensity)
+        )
 
-    pnoise = p.Perlin(frequency=0.6,lacunarity=2,octaves=8,persistance=0.2,seed=0)
-    for m in range(800):
-        for n in range(800):
-            col = [int((pnoise.value(x/10.0, y/10.0, 0)+1) * 200), ] *3
-            if col[1] <160 and col[0] <160 and col[0] <160:
-                return color(int(dark_wood[0]*intensity),int(dark_wood[1]*intensity),int(dark_wood[2]*intensity))
-            else:
-                return color(int(near_white[0]*intensity),int(near_white[1]*intensity),int(near_white[2]*intensity))
-                '''mul = [int((near_white[0]/255.0*col[0])* intensity),int((near_white[1]/255.0*col[1])* intensity),
-                int((near_white[2]/255.0*col[2])* intensity)]
-                if mul[0] < 0: mul[0] =0
-                if mul[1] < 0: mul[1] = 0
-                if mul[2] < 0: mul[2] = 0
-                return color(mul[0], mul[1], mul[2])'''
+def gouradStripedCat(render, x, y, **kwargs):
+    w,v,u = kwargs["bar"]
+    nA, nB, nC = kwargs["normales"]
+    luz = kwargs["light"]
+    tx, ty = kwargs["txt_coor"]
+    cmat = kwargs["colorMat"]
+    normx = nA.x*w + nB.x*v + nC.x*u 
+    normy = nA.y*w + nB.y*v + nC.y*u 
+    normz = nA.z*w + nB.z*v + nC.z*u 
+    vnormal = Vector3(normx, normy, normz)
+    intensity = prodPunto(vnormal, luz)
+    if intensity < 0:
+        intensity =0
+    elif intensity >1:
+        intensity =1
+
+    #colores
+    kitty_orange = (147,74,29)
+    kitty_pale = (154,119,89)
+
+    #print(cmat[0], cmat[1], cmat[2])
+    #se evalúan los colores de los materiales para que la nariz y los ojos se pinten con textura y el cuerpo se pinte con noise
+    if cmat[0] !=0  and cmat[1] !=0  and cmat[2] !=0 :
+        pnoise = p.Perlin(frequency=0.3,lacunarity=2,octaves=8,persistance=0.5,seed=0)
+        for m in range(800):
+            for n in range(800):
+                col = [int((pnoise.value(x/700.0, y/10.0, 0)+1) * 200), ] *3
+                if col[1] > 160:
+                    mul = [int((kitty_orange[0]/255.0*col[0])* intensity),int((kitty_orange[1]/255.0*col[1])* intensity),
+                    int((kitty_orange[2]/255.0*col[2])* intensity)]
+                    if mul[0] < 0: mul[0] =0
+                    if mul[1] < 0: mul[1] = 0
+                    if mul[2] < 0: mul[2] = 0
+                    return color(mul[0], mul[1], mul[2])
+                else:
+                    return color(int(kitty_pale[0]*intensity),int(kitty_pale[1]*intensity),int(kitty_pale[2]*intensity))
+    else: 
+        tcolor = render.active_txt.get_colorSI(tx,ty)
+        return color(
+            round(tcolor[2]*intensity),
+            round(tcolor[1]*intensity),
+            round(tcolor[0]*intensity)
+        )

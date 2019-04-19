@@ -14,7 +14,14 @@ light = s.Vector3(0,1,1)
 #s.bm.load("cat.obj", "cat.mtl", tcat, (-0.5,0,0), (0.45,0.45,0.45), (0,0,0), (0,1,5), (0,1,0),(0,0,0), light)
 tduck = s.Texture("duck.bmp")
 #s.bm.load("duck.obj", "duck.mtl", tduck, (0.5,0,0), (0.45,0.45,0.45), (0,0,0), (0,1,5), (0,1,0),(0,0,0), light)
-'''
+
 tdog = s.Texture("dalmata.bmp")
 s.bm.load("dalmata.obj", "dalmata.mtl", tdog, (-0.5,0,0), (0.3,0.3,0.3), (0,0,0), (0,1,5), (0,1,0),(0,0,0), light)
+
+
+tdog = s.Texture("dalmata.bmp")
+s.bm.load("dalmata.obj", "dalmata.mtl", tdog, (-0.5,0,0), (0.3,0.3,0.3), (0,0,0), (0,1,5), (0,1,0),(0,0,0), light)
+'''
+tscat = s.Texture("stripedcat.bmp")
+s.bm.load("stripedcat.obj", "stripedcat.mtl", tscat, (-0.5,0,0), (0.45,0.45,0.45), (0,0,0), (0,1,5), (0,1,0),(0,0,0), light)
 s.glFinish("escena")
