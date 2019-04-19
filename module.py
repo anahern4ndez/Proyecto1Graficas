@@ -459,6 +459,8 @@ class Bitmap(object):
             self.active_shader = gouradDalmatian
         if filename == "cat.obj":
             self.active_shader = gouradStripedCat
+        if filename == "duck.obj":
+            self.active_shader = gouradPig
         self.loadViewportMatrix()
         self.loadModelMatrix(translate, scale, rotate)
         self.lookAt(Vector3(*eye), Vector3(*up), Vector3(*center))
@@ -655,11 +657,11 @@ def gouradStripedCat(render, x, y, **kwargs):
     #print(cmat[0], cmat[1], cmat[2])
     #se evalúan los colores de los materiales para que la nariz y los ojos se pinten con textura y el cuerpo se pinte con noise
     if cmat[0] !=0  and cmat[1] !=0  and cmat[2] !=0 :
-        pnoise = p.Perlin(frequency=0.8,lacunarity=2,octaves=12,persistance=1,seed=0)
+        pnoise = p.Perlin(frequency=0.3,lacunarity=2,octaves=12,persistance=1,seed=0)
         for m in range(800):
             for n in range(800):
-                col = [int((pnoise.value(x/700.0, y/50.0, 0)+1) * 200), ] *3
-                if col[1] > 160 and col[0] > 200:
+                col = [int((pnoise.value(x/700.0, y/10.0, 0)+1) * 200), ] *3
+                if col[1] > 160 and (col[0] > 200 or col[2] > 200):
                     mul = [int((dark_wood[0]/255.0*col[0])* intensity),int((dark_wood[1]/255.0*col[1])* intensity),
                     int((dark_wood[2]/255.0*col[2])* intensity)]
                     if mul[0] < 0: mul[0] =0
@@ -675,3 +677,57 @@ def gouradStripedCat(render, x, y, **kwargs):
             round(tcolor[1]*intensity),
             round(tcolor[0]*intensity)
         )
+
+def gouradDuck(render, x, y, **kwargs):
+    w,v,u = kwargs["bar"]
+    nA, nB, nC = kwargs["normales"]
+    luz = kwargs["light"]
+    tx, ty = kwargs["txt_coor"]
+    cmat = kwargs["colorMat"]
+    normx = nA.x*w + nB.x*v + nC.x*u 
+    normy = nA.y*w + nB.y*v + nC.y*u 
+    normz = nA.z*w + nB.z*v + nC.z*u 
+    vnormal = Vector3(normx, normy, normz)
+    intensity = prodPunto(vnormal, luz)
+    if intensity < 0:
+        intensity =0
+    if intensity > 1:
+        intensity =1    
+    elif intensity < 0.3:
+        intensity = 0.3
+    elif intensity < 0.6:
+        intensity = 0.6
+    elif intensity < 0.9:
+        intensity = 0.9
+    else:
+        intensity = 1.0
+    tcolor = render.active_txt.get_colorSI(tx,ty)
+    return color(
+        round(tcolor[2]*intensity),
+        round(tcolor[1]*intensity),
+        round(tcolor[0]*intensity)
+    )
+
+def gouradPig(render, x, y, **kwargs):
+    w,v,u = kwargs["bar"]
+    nA, nB, nC = kwargs["normales"]
+    luz = kwargs["light"]
+    tx, ty = kwargs["txt_coor"]
+    cmat = kwargs["colorMat"]
+    normx = nA.x*w + nB.x*v + nC.x*u 
+    normy = nA.y*w + nB.y*v + nC.y*u 
+    normz = nA.z*w + nB.z*v + nC.z*u 
+    vnormal = Vector3(normx, normy, normz)
+    intensity = prodPunto(vnormal, luz)
+    if intensity < 0:
+        intensity =0
+    if intensity > 1:
+        intensity =1
+
+    y = y/(render.height)
+    tcolor = render.active_txt.get_colorSI(tx,ty)
+    return color(
+        round(tcolor[2]*intensity*y),
+        round(tcolor[1]*intensity*y),
+        round(tcolor[0]*intensity*y)
+    )
