@@ -1,13 +1,24 @@
 # Blender MTL File: 'cat.blend'
-# Material Count: 1
+# Material Count: 2
 
-newmtl cat-textured.001
+newmtl Body
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd cat-texture.jpg
+
+newmtl Face
 Ns 0.000000
 Ka 0.000000 0.000000 0.000000
-Kd 0.800000 0.800000 0.800000
+Kd 0.000000 0.000000 0.000000
 Ks 0.000000 0.000000 0.000000
 Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 2
-map_Kd /Users/polaris/Documents/5/GRAFICAS/proyecto1/cat/cat-texture.jpg
+map_Kd cat-texture.jpg
