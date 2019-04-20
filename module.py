@@ -569,7 +569,7 @@ class Bitmap(object):
                     else:
                         colour = texture.get_color(tx, ty, intensidad)
                     z = A.z*w + B.z*v  + C.z*u
-                    if self.active_shader != gourad and self.active_shader != gouradPig:
+                    if self.active_shader != gouradDuck and self.active_shader != gourad:
                         if z > self.zbuffer[x][y]:
                             self.point(x,y,colour)
                             self.zbuffer[x][y] = z
@@ -580,12 +580,16 @@ class Bitmap(object):
                 if not texture and x>=0 and y >=0 and x < self.width and y< self.height:
                     if self.active_shader == gouradPig:
                         colour = self.active_shader(self, x, y, bar=(w,v,u), normales=(nA, nC, nB), light = luz, colorMat = colorMat)
+                        z = A.z*w + B.z*v  + C.z*u
+                        if z > self.zbuffer[y][x]:
+                            self.point(x,y,colour)
+                            self.zbuffer[y][x] = z
                     else: 
                         colour = color(colour[0],colour[1],colour[2])
-                    z = A.z*w + B.z*v  + C.z*u
-                    if z > self.zbuffer[x][y]:
-                        self.point(x,y,colour)
-                        self.zbuffer[x][y] = z
+                        z = A.z*w + B.z*v  + C.z*u
+                        if z > self.zbuffer[x][y]:
+                            self.point(x,y,colour)
+                            self.zbuffer[x][y] = z
 
 def gourad(render, x, y, **kwargs):
     w,v,u = kwargs["bar"]
@@ -709,10 +713,14 @@ def gouradDuck(render, x, y, **kwargs):
     if intensity > 1:
         intensity =1    
     elif intensity < 0.3:
+        intensity = 0
+    elif intensity > 0.3:
         intensity = 0.3
-    elif intensity < 0.6:
+    elif intensity > 0.6:
         intensity = 0.6
-    elif intensity < 0.9:
+    elif intensity > 0.8:
+        intensity = 0.8
+    elif intensity > 0.9:
         intensity = 0.9
     else:
         intensity = 1.0
@@ -737,10 +745,10 @@ def gouradPig(render, x, y, **kwargs):
         intensity =0
     if intensity > 1:
         intensity =1
-
-    y = y/(render.height)
+    
+    y = y/(render.height*1.0)
     return color(
-        round(cmat[2]*intensity*y),
-        round(cmat[1]*intensity*y),
-        round(cmat[0]*intensity*y)
+        int(cmat[0]*255*intensity),
+        int(cmat[1]*255*intensity),
+        int(cmat[2]*255*intensity)
     )
