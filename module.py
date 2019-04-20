@@ -460,6 +460,8 @@ class Bitmap(object):
         if filename == "cat.obj":
             self.active_shader = gouradStripedCat
         if filename == "duck.obj":
+            self.active_shader = gouradDuck
+        if filename == "pig.obj":
             self.active_shader = gouradPig
         self.loadViewportMatrix()
         self.loadModelMatrix(translate, scale, rotate)
@@ -547,7 +549,7 @@ class Bitmap(object):
             for y in range (self.height):
                 color = texture.pixels[y][x]
                 self.point(x,y,color)
-                
+
     def triangle(self, A, B, C, colour= (0,0,0), texture= None, texture_coords=(), intensidad=1, nA = None, nB=None, nC=None, luz = Vector3(0,1,1)):
         xy_min, xy_max = ordenarXY(A,B,C)
         
@@ -571,7 +573,10 @@ class Bitmap(object):
                         self.point(x,y,colour)
                         self.zbuffer[x][y] = z
                 if not texture and x>=0 and y >=0 and x < self.width and y< self.height:
-                    colour = color(colour[0],colour[1],colour[2])
+                    if self.active_shader == gouradPig:
+                        colour = self.active_shader(self, x, y, bar=(w,v,u), normales=(nA, nC, nB), light = luz, colorMat = colorMat)
+                    else: 
+                        colour = color(colour[0],colour[1],colour[2])
                     z = A.z*w + B.z*v  + C.z*u
                     if z > self.zbuffer[x][y]:
                         self.point(x,y,colour)
@@ -717,7 +722,6 @@ def gouradPig(render, x, y, **kwargs):
     w,v,u = kwargs["bar"]
     nA, nB, nC = kwargs["normales"]
     luz = kwargs["light"]
-    tx, ty = kwargs["txt_coor"]
     cmat = kwargs["colorMat"]
     normx = nA.x*w + nB.x*v + nC.x*u 
     normy = nA.y*w + nB.y*v + nC.y*u 
@@ -730,9 +734,8 @@ def gouradPig(render, x, y, **kwargs):
         intensity =1
 
     y = y/(render.height)
-    tcolor = render.active_txt.get_colorSI(tx,ty)
     return color(
-        round(tcolor[2]*intensity*y),
-        round(tcolor[1]*intensity*y),
-        round(tcolor[0]*intensity*y)
+        round(cmat[2]*intensity*y),
+        round(cmat[1]*intensity*y),
+        round(cmat[0]*intensity*y)
     )

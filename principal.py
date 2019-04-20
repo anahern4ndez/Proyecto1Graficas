@@ -12,10 +12,13 @@ s.bm = s.Bitmap(1920, 1080)
 light = s.Vector3(0,1,1)
 background = s.Texture("farm.bmp")
 s.bm.loadBackground(background)
-tcat = s.Texture("cattexture.bmp")
+#tcat = s.Texture("cattexture.bmp")
 #             obj      mtl   texture  translate         scale            rotate         eye       up   center      light
-s.bm.load("cat.obj", "cat.mtl", tcat, (-0.7,0.1,-0.5), (0.8,0.95,0.8), (0,math.pi/8,0), (0,1,5), (0,1,0),(0,0,0), s.Vector3(-1.5,1,5))
+#s.bm.load("cat.obj", "cat.mtl", tcat, (-0.7,0.05,-0.3), (0.8,0.95,0.8), (0,math.pi/8,0), (0,1,5), (0,1,0),(0,0,0), s.Vector3(-1.5,1,5))
+#tdog = s.Texture("dalmata.bmp")
+#s.bm.load("dalmata.obj", "dalmata.mtl", tdog, (-0.5,0,0), (1,2,1), (0,0,0), (0,1,5), (0,1,0),(0,0,0), light)
 
+s.bm.load("pig.obj", "pig.mtl", None, (-0.5,0,0), (1,2,1), (0,0,0), (0,1,5), (0,1,0),(0,0,0), light)
 '''
 tcat = s.Texture("cattexture.bmp")
 
