@@ -471,7 +471,7 @@ class Bitmap(object):
         for face in model.faces:
             vcount = len(face)
             if vcount == 3:
-
+                
                      ##             normales 
                 n1 = face[0][2] -1
                 n2 = face[1][2] -1
@@ -507,10 +507,10 @@ class Bitmap(object):
                             gc = material.rgbDic[key][1]
                             bc = material.rgbDic[key][2]
                         
-                if texture == None:
+                if not texture:
                     self.triangle(
                         a,b,c, 
-                        colour = (round(shade*rc),round(shade*gc),round(shade*bc)), 
+                        colour = (rc, gc, bc), 
                         texture = None, 
                         texture_coords = (),
                         intensidad = intensidad,
