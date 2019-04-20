@@ -3,7 +3,7 @@
 # Ana Lucia Hernandez
 # 17138
 # Graficas por Computadora 
-#Modulo donde se guardas las funciones necesarias para el sr6. 
+# Modulo donde se guardan las funciones necesarias para el renderizado de los modelos 3d. 
 
 import struct
 from collections import namedtuple
@@ -569,9 +569,14 @@ class Bitmap(object):
                     else:
                         colour = texture.get_color(tx, ty, intensidad)
                     z = A.z*w + B.z*v  + C.z*u
-                    if z > self.zbuffer[x][y]:
-                        self.point(x,y,colour)
-                        self.zbuffer[x][y] = z
+                    if self.active_shader != gourad and self.active_shader != gouradPig:
+                        if z > self.zbuffer[x][y]:
+                            self.point(x,y,colour)
+                            self.zbuffer[x][y] = z
+                    else:
+                        if z > self.zbuffer[y][x]:
+                            self.point(x,y,colour)
+                            self.zbuffer[y][x] = z
                 if not texture and x>=0 and y >=0 and x < self.width and y< self.height:
                     if self.active_shader == gouradPig:
                         colour = self.active_shader(self, x, y, bar=(w,v,u), normales=(nA, nC, nB), light = luz, colorMat = colorMat)
