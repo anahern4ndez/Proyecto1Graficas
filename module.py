@@ -275,11 +275,11 @@ class Texture(object):
         x = int(tx * self.width)
         y = int(ty * self.height)
         return bytes(map(lambda b: round(b*intensidad) if (b *intensidad > 0) else 0,(self.pixels[y][x])))
-
     def get_colorSI(self, tx, ty):
         x = int(tx * self.width)
         y = int(ty * self.height)
         return bytes(map(lambda b: round(b) if (b > 0) else 0,(self.pixels[y][x])))
+
 
        
 # ==========================================================================
@@ -542,7 +542,12 @@ class Bitmap(object):
                             texture_coords= (tA, tB, tC), 
                             intensidad=intensidad
                         )
-    
+    def loadBackground(self, texture= None):
+        for x in range(self.width):
+            for y in range (self.height):
+                color = texture.pixels[y][x]
+                self.point(x,y,color)
+                
     def triangle(self, A, B, C, colour= (0,0,0), texture= None, texture_coords=(), intensidad=1, nA = None, nB=None, nC=None, luz = Vector3(0,1,1)):
         xy_min, xy_max = ordenarXY(A,B,C)
         
@@ -553,7 +558,7 @@ class Bitmap(object):
                 if w< 0 or v <0 or u<0:
                     continue
                 
-                if texture and (x>=0 and y >=0 and x < self.width and y< self.height):
+                if texture and x>=0 and y >=0 and x < self.width and y< self.height:
                     tA, tC, tB = texture_coords
                     tx = tA.x*w + tB.x*v + tC.x*u
                     ty = tA.y*w + tB.y*v + tC.y*u
@@ -562,14 +567,9 @@ class Bitmap(object):
                     else:
                         colour = texture.get_color(tx, ty, intensidad)
                     z = A.z*w + B.z*v  + C.z*u
-                    if self.active_shader == gouradStripedCat:
-                        if z > self.zbuffer[y][x]:
-                            self.point(x,y,colour)
-                            self.zbuffer[y][x] = z
-                    else:
-                        if z > self.zbuffer[x][y]:
-                            self.point(x,y,colour)
-                            self.zbuffer[x][y] = z
+                    if z > self.zbuffer[x][y]:
+                        self.point(x,y,colour)
+                        self.zbuffer[x][y] = z
                 if not texture and x>=0 and y >=0 and x < self.width and y< self.height:
                     colour = color(colour[0],colour[1],colour[2])
                     z = A.z*w + B.z*v  + C.z*u
@@ -577,12 +577,6 @@ class Bitmap(object):
                         self.point(x,y,colour)
                         self.zbuffer[x][y] = z
 
-    def loadBackground(self, texture= None):
-        for x in range(self.width):
-            for y in range (self.height):
-                color = texture.pixels[y][x]
-                self.point(x,y,color)
-        
 def gourad(render, x, y, **kwargs):
     w,v,u = kwargs["bar"]
     tx, ty = kwargs["txt_coor"]
