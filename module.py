@@ -746,9 +746,12 @@ def gouradPig(render, x, y, **kwargs):
     if intensity > 1:
         intensity =1
     
-    y = y/(render.height*1.0)
-    return color(
-        int(cmat[0]*255*intensity),
-        int(cmat[1]*255*intensity),
-        int(cmat[2]*255*intensity)
-    )
+    pnoise = p.Perlin(frequency=0.6,lacunarity=2,octaves=8,persistance=0.2,seed=0)
+    for m in range(800):
+        for n in range(800):
+            col = [int((pnoise.value(x/10.0, y/10.0, 0)+1) * 200), ] *3
+            return color(
+                round(col[0]* cmat[0] *intensity),
+                round(col[1]* cmat[1] *intensity),
+                round(col[2]* cmat[2] *intensity)
+            )
